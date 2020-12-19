@@ -23,14 +23,15 @@ class MainActivity : AppCompatActivity() {
     private var data = arrayListOf<ArrayList<LanguageItem>>()
     private var imageSize: Int = 0
 
-    class ImageData(var lastModificationDate: Long, var row: Int, var column: Int)
+    private class ImageData(var lastModificationDate: Long, var row: Int, var column: Int)
 
     private val imageDatas = hashMapOf<String, ImageData>()
     private var loadedName = ""
 
-    class TableAdapter(val dataset: MutableList<MutableList<LinearLayout>>) :
-        RecyclerView.Adapter<TableAdapter.TableHolder>() {
+    private class TableAdapter : RecyclerView.Adapter<TableAdapter.TableHolder>() {
         class TableHolder(val tableRow: TableRow) : RecyclerView.ViewHolder(tableRow)
+
+        val dataset: MutableList<MutableList<LinearLayout>> = mutableListOf()
 
         override fun onCreateViewHolder(
             parent: ViewGroup,
@@ -55,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         imageSize = computeImageSize()
         tableLayout.also {
             it.layoutManager = LinearLayoutManager(this)
-            it.adapter = TableAdapter(mutableListOf())
+            it.adapter = TableAdapter()
         }
         addItemToRecyclerView(createGeneratingImage())
         addItems()
@@ -76,7 +77,7 @@ class MainActivity : AppCompatActivity() {
             this.layoutParams = layoutParams
         }.also { im ->
             im.setOnClickListener {
-                val generated = Intent(this, ChooseTopics::class.java)
+                val generated = Intent(this, ChooseTopicsActivity::class.java)
                 generated.putExtra(CROSSWORD_DATA_NAME_VARIABLE, data)
                 generated.putExtra(CROSSWORD_IMAGE_SIZE_VARIABLE, imageSize)
                 startActivityForResult(generated, ACTIVITY_CHOOSE)
@@ -99,7 +100,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     //TODO show dialog above or below crossword image
-    //TODO add test for deletation
+    //TODO add test for deletion
     class DeleteCrossword(
         private val context: MainActivity,
         private val name: String
@@ -116,8 +117,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun deleteCrosswordData(name: String) {
         pathToImage(name).delete()
-        File(filesDir, name + Game.DATA_SUFFIX).delete()
-        File(filesDir, name + Game.STATE_SUFFIX).delete()
+        File(filesDir, name + GameActivity.DATA_SUFFIX).delete()
+        File(filesDir, name + GameActivity.STATE_SUFFIX).delete()
     }
 
     private fun deleteCrossword(name: String) = DeleteCrossword(this, name).apply {
@@ -162,7 +163,7 @@ class MainActivity : AppCompatActivity() {
             linearLayout.addView(this)
         }
         imageView.setOnClickListener {
-            Intent(this@MainActivity, Game::class.java).apply {
+            Intent(this@MainActivity, GameActivity::class.java).apply {
                 putExtra(CROSSWORD_NAME_VARIABLE, textView.text)
                 putExtra(CROSSWORD_IS_GENERATED_VARIABLE, false)
                 putExtra(CROSSWORD_IMAGE_SIZE_VARIABLE, imageSize)

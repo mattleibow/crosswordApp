@@ -5,15 +5,15 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class NotEnoughWordsInstrumentedTest : ChoseTopicsToastTest() {
+class NotEnoughWordsBecauseTooShortInstrumentedTests : ChoseTopicsToastTest() {
 
     @Test
     fun choseTopics() {
         choseTopicsImpl(
-            "notEnoughWords.json", getContext().getString(
+                "tooShortWordsData.json", getContext().getString(
                 R.string.not_enough_words,
                 ChooseTopicsActivity.CROSSWORD_SIZE
-            )
+        )
         )
     }
 }

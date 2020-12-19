@@ -81,7 +81,7 @@ fun getLastCrossword(): Crossword {
         if (last.lastModified() < file.lastModified()) last = file
     }
     val crosswordName =
-        last?.name?.removeSuffix(MainActivity.IMAGE_FORMAT) + Game.DATA_SUFFIX
+        last?.name?.removeSuffix(MainActivity.IMAGE_FORMAT) + GameActivity.DATA_SUFFIX
 
     return getContext().openFileInput(crosswordName).use {
         buildCrossword { UClickJsonFormatter().read(this, it) }
@@ -100,7 +100,7 @@ fun getContext(): Context = InstrumentationRegistry.getInstrumentation().targetC
 
 fun getTestContext(): Context = InstrumentationRegistry.getInstrumentation().context
 
-fun readConfig(): Int = Game.readConfig(getContext().filesDir, getContext().resources)
+fun readConfig(): Int = GameActivity.readConfig(getContext().filesDir, getContext().resources)
 
 fun chooseGenerateCrossword() {
     onView(getItemFromCrosswordList(0, 0)).perform(ViewActions.click())
@@ -184,10 +184,8 @@ fun testCell(word: Crossword.Word, ch: String) {
     )
 }
 
-class ToastMatcher(private val maxFailures: Int = DEFAULT_MAX_FAILURES) :
+class ToastMatcher :
     TypeSafeMatcher<Root>() {
-
-    private var failures = 0
 
     override fun describeTo(description: Description) {
         description.appendText("is toast")
@@ -203,20 +201,18 @@ class ToastMatcher(private val maxFailures: Int = DEFAULT_MAX_FAILURES) :
             val appToken = root.decorView.applicationWindowToken
             if (windowToken === appToken) return true
         }
-        return (++failures >= maxFailures)
+        return false
     }
 
     companion object {
-        private const val DEFAULT_MAX_FAILURES = 5
+        fun onToast(text: String): ViewInteraction =
+            onView(withText(text)).inRoot(isToast())!!
 
-        fun onToast(text: String, maxRetries: Int = DEFAULT_MAX_FAILURES): ViewInteraction =
-            onView(withText(text)).inRoot(isToast(maxRetries))!!
+        fun onToast(textId: Int): ViewInteraction =
+            onView(withText(textId)).inRoot(isToast())!!
 
-        fun onToast(textId: Int, maxRetries: Int = DEFAULT_MAX_FAILURES): ViewInteraction =
-            onView(withText(textId)).inRoot(isToast(maxRetries))!!
-
-        fun isToast(maxRetries: Int = DEFAULT_MAX_FAILURES): Matcher<Root> {
-            return ToastMatcher(maxRetries)
+        fun isToast(): Matcher<Root> {
+            return ToastMatcher()
         }
     }
 }
@@ -227,10 +223,13 @@ open class ChoseTopicsToastTest {
     var activityTestRule: ActivityScenarioRule<MainActivity> =
         ActivityScenarioRule(MainActivity::class.java)
 
-    private lateinit var scenario: ActivityScenario<ChooseTopics>
+    private lateinit var scenario: ActivityScenario<ChooseTopicsActivity>
 
     fun choseTopicsImpl(fileName: String, message: String) {
-        Intent(ApplicationProvider.getApplicationContext(), ChooseTopics::class.java).apply {
+        Intent(
+            ApplicationProvider.getApplicationContext(),
+            ChooseTopicsActivity::class.java
+        ).apply {
             val data =
                 getTestContext().resources.assets.open(fileName)
                     .use { WordsReader().read(it) }
@@ -240,9 +239,7 @@ open class ChoseTopicsToastTest {
         chooseFirstTopic()
         onView(isRoot()).perform(waitForView(withId(R.id.ok_play)))
         onView(withId(R.id.ok_play)).perform(ViewActions.click())
-        onView(
-            withText(message)
-        ).inRoot(ToastMatcher.isToast()).check(
+        ToastMatcher.onToast(message).check(
             ViewAssertions.matches(isDisplayed())
         )
     }
